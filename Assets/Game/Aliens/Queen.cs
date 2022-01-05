@@ -20,8 +20,11 @@ public class Queen : MonoBehaviour {
     // Properties.
     [Space(5), Header("Alien Eggs")]
     public Egg[] eggs;
+    [HideInInspector] public List<Alien> nest = new List<Alien>();
 
     [Space(5), Header("Settings")]
+    public float maxBiomass;
+    [HideInInspector] public float biomass;
     public float biomassConverted;
     public float biomassConversionRate;
     public float hatchRadius;
@@ -34,6 +37,7 @@ public class Queen : MonoBehaviour {
 
     // Runs once before the first frame.
     void Start() {
+        biomass = maxBiomass;
         RefreshEggs();
     }
 
@@ -108,6 +112,10 @@ public class Queen : MonoBehaviour {
             return;
         }
 
+        if (biomass < queue[0].biomass) {
+            return;
+        }
+
         biomassConverted += biomassConversionRate * deltaTime;
         if (biomassConverted >= queue[0].biomass) {
             HatchAlien();
@@ -119,12 +127,25 @@ public class Queen : MonoBehaviour {
 
     // Spawns the next egg in the queue.
     private void HatchAlien() {
+        biomass -= queue[0].biomass;
         Alien alien = Instantiate(queue[0].alien).GetComponent<Alien>();
         alien.Init(this);
+        nest.Add(alien);
     }
 
     private void ResetBiomass() {
         biomassConverted = 0f;
+    }
+
+    public void StoreBiomass(Alien alien) {
+        biomass += alien.biomass;
+        if (biomass > maxBiomass) {
+            alien.biomass = biomass - maxBiomass;
+            biomass = maxBiomass;
+        }
+        else {
+            alien.biomass = 0f;
+        }
     }
 
     void OnDrawGizmos() {

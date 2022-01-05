@@ -25,14 +25,21 @@ public class Human : MonoBehaviour {
     private float thinkTicks;
     public float thinkInterval;
 
+    public float maxHealth;
+    public float health;
+
     // Initializes the alien.
     void Start() {
         Init();
     }
 
     public virtual void Init() {
+
         spriteRenderer = GetComponent<SpriteRenderer>();
         target.position = transform.position;
+
+        health = maxHealth;
+
         gameObject.SetActive(true);
     }
 
@@ -69,6 +76,19 @@ public class Human : MonoBehaviour {
             target.position = Random.insideUnitCircle * 5f;
             thinkTicks -= thinkInterval;
         }
+    }
+
+    public void Hurt(int damage) {
+        health -= damage;
+        if (health <= 0) {
+            Die();
+        }
+    }
+
+    void Die() {
+        Biomass biomass = new GameObject("Biomass", typeof(Biomass)).GetComponent<Biomass>();
+        biomass.Init(transform.position, 0.1f);
+        Destroy(gameObject);
     }
 
     void CheckSelect() {

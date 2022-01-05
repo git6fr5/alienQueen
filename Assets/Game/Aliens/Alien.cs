@@ -13,11 +13,17 @@ public class Alien : MonoBehaviour {
     SpriteRenderer spriteRenderer;
 
     // Properties.
-    public Transform target;
+    [HideInInspector] public float horizontal;
+    [HideInInspector] public float vertical;
+
     public Params speed;
     public float power;
     public float damping;
     private Vector3 velocity;
+
+    public bool attack;
+    public float biomass;
+    public float maxBiomass;
 
     public bool isSelected;
     public bool isMouseOver;
@@ -26,7 +32,6 @@ public class Alien : MonoBehaviour {
     public virtual void Init(Queen queen) {
 
         transform.position = queen.transform.position + (Vector3)(Random.insideUnitCircle.normalized) * queen.hatchRadius;
-        target.position = transform.position;
         spriteRenderer = GetComponent<SpriteRenderer>();
 
         this.queen = queen;
@@ -36,68 +41,65 @@ public class Alien : MonoBehaviour {
     // Runs once per frame.
     void Update() {
         CheckSelect();
-        GetTarget();
         Move();
-        // Seperation();
+        if (attack) {
+            Attack();
+            attack = false;
+        }
     }
 
     void Move() {
 
-        Vector3 displacement = (target.position - transform.position);
-        if (displacement.sqrMagnitude < 0.05f * 0.05f) {
-            velocity = Vector3.zero;
-            return;
-        }
-
         float deltaTime = Time.deltaTime;
 
-        Vector3 direction = displacement.normalized;
+        Vector3 direction = new Vector3(horizontal, vertical, 0f).normalized;
         Vector3 acceleration = direction * power;
         velocity += acceleration * deltaTime;
         velocity = speed.Clamp(velocity.magnitude) * velocity.normalized;
-        velocity *= damping;
+
+        if (acceleration == Vector3.zero) {
+            velocity *= damping;
+        }
 
         transform.position += velocity * deltaTime;
 
+        horizontal = 0f;
+        vertical = 0f;
+
     }
 
-    float seperationThreshold = 0.5f;
-    void Seperation() {
+    void Attack() {
 
-        Vector3 seperationForce = Vector3.zero;
-
-        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, seperationThreshold);
+        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, 1f);
         for (int i = 0; i < hits.Length; i++) {
-            Alien alien = hits[i].GetComponent<Alien>();
-            if (alien != null && alien != this) {
-                Vector3 displacement = (transform.position - alien.transform.position);
-                seperationForce -= displacement.normalized * 20f * (seperationThreshold - displacement.magnitude);
+            Human human = hits[i].GetComponent<Human>();
+            if (human != null) {
+                human.Hurt(1);
+                return;
+            }
+
+            Biomass biomass = hits[i].GetComponent<Biomass>();
+            if (biomass != null) {
+                Eat(biomass);
+                return;
+            }
+
+            QueenUI queenUI = hits[i].GetComponent<QueenUI>();
+            if (queenUI != null) {
+                queenUI.queen.StoreBiomass(this);
+                return;
             }
         }
-
-        transform.position += seperationForce * Time.deltaTime;
-
     }
 
-    void GetTarget() {
-        if (isSelected && Input.GetMouseButtonDown(1)) {
-            target.parent = null;
-            target.position = GameRules.MousePosition - Vector3.forward * GameRules.MousePosition.z;
+    void Eat(Biomass biomass) {
+        if (this.biomass + biomass.value < maxBiomass) {
+            this.biomass += biomass.value;
+            Destroy(biomass.gameObject);
         }
     }
 
     void CheckSelect() {
-
-        if (Input.GetMouseButtonDown(0)) {
-            if (Input.GetKey(KeyCode.LeftShift)) {
-                if (isMouseOver) {
-                    isSelected = true;
-                }
-            }
-            else {
-                isSelected = isMouseOver;
-            }
-        }
 
         if (isSelected) {
             spriteRenderer.material.SetFloat("_OutlineWidth", GameRules.OutlineWidth);
@@ -114,10 +116,6 @@ public class Alien : MonoBehaviour {
 
     void OnMouseExit() {
         isMouseOver = false;
-    }
-
-    void OnDrawGizmos() {
-        Gizmos.DrawLine(transform.position, target.position);
     }
 
 }

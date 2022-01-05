@@ -21,14 +21,15 @@ public class QueenUI : MonoBehaviour {
     public bool isMouseOver;
 
     // Progress.
-    [Space(5), Header("Progress")]
+    [Space(5), Header("Sliders")]
     public Slider progressSlider;
+    public Slider storageSlider;
 
     // Options.
     [Space(5), Header("Options")]
     public float optionRadius;
     public Transform optionParent;
-    private List<EggUI> options = new List<EggUI>();
+    [HideInInspector] public List<EggUI> options = new List<EggUI>();
 
     // Queue.
     [Space(5), Header("Queue")]
@@ -50,7 +51,6 @@ public class QueenUI : MonoBehaviour {
 
     // Runs once every frame.
     void Update() {
-        CheckSelect();
         DisplayOptions();
         DisplayProgress();
         DisplayQueue();
@@ -62,17 +62,6 @@ public class QueenUI : MonoBehaviour {
 
     void OnMouseExit() {
         isMouseOver = false;
-    }
-
-
-    void CheckSelect() {
-
-        if (Input.GetMouseButtonDown(0) && !isSelected) {
-            isSelected = isMouseOver;
-        }
-        if (Input.GetMouseButtonDown(1) && isSelected) {
-            isSelected = false;
-        }
     }
 
     void CreateOptions() {
@@ -121,6 +110,9 @@ public class QueenUI : MonoBehaviour {
     }
 
     void DisplayProgress() {
+
+        float storage = queen.biomass / queen.maxBiomass;
+        storageSlider.value = storage;
 
         GameObject displayObject = progressSlider.gameObject;
 

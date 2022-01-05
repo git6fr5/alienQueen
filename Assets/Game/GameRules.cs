@@ -50,84 +50,20 @@ public class GameRules : MonoBehaviour {
     public static UnityEngine.Camera MainCamera;
     public static Vector3 MousePosition => MainCamera.ScreenToWorldPoint(UnityEngine.Input.mousePosition);
 
+    public Sprite biomassSprite;
+    public static Sprite BiomassSprite;
+
     void Start() {
         MainCamera = Camera.main;
+        BiomassSprite = biomassSprite;
     }
-
-    public Vector3 cachedPositionA;
-    public Vector3 cachedPositionB;
 
     void Update() {
-
-
-        if (Input.GetMouseButtonDown(0)) {
-            cachedPositionA = MousePosition;
-        }
-        if (Input.GetMouseButton(0)) {
-            cachedPositionB = MousePosition;
-        }
-
-        if (Input.GetMouseButtonUp(0)) {
-            // Select
-            Select();
-
-            // Reset
-            cachedPositionA = Vector3.zero;
-            cachedPositionB = Vector3.zero;
-        }
-
-        if (Input.GetKeyDown(KeyCode.S)) {
-            Seperate(1f);
-        }
-
-        if (Input.GetKey(KeyCode.S)) {
-            float deltaTime = Time.deltaTime;
-            Seperate(deltaTime);
-        }
-
-    }
-
-    void Seperate(float force) {
-
-        Alien[] aliens = (Alien[])GameObject.FindObjectsOfType(typeof(Alien));
-        List<Alien> selectedAliens = new List<Alien>();
-
-        for (int i = 0; i < aliens.Length; i++) {
-            if (aliens[i].isSelected) {
-                selectedAliens.Add(aliens[i]);
-            }
-        }
-
-        for (int i = 0; i < selectedAliens.Count; i++) {
-
-            Vector3 targetDirection = Quaternion.Euler(0f, 0f, 360f * (float)i / (float)selectedAliens.Count) * Vector3.right;
-            selectedAliens[i].target.parent = null;
-            selectedAliens[i].target.position += targetDirection * force;
-
-        }
-
-    }
-
-    void Select() {
-
-        Collider2D[] hits = Physics2D.OverlapAreaAll(cachedPositionA, cachedPositionB);
-        for (int i = 0; i < hits.Length; i++) {
-            Alien alien = hits[i].GetComponent<Alien>();
-            if (alien != null) {
-                alien.isSelected = true;
-            }
-        }
 
     }
 
     void OnDrawGizmos() {
 
-        Vector3 center = (cachedPositionA + cachedPositionB) / 2f;
-        float width = Mathf.Abs(cachedPositionA.x - cachedPositionB.x);
-        float height = Mathf.Abs(cachedPositionA.y - cachedPositionB.y);
-        center.z = 0f;
-
-        Gizmos.DrawWireCube(center, new Vector3(width, height, 0.1f));
 
     }
 

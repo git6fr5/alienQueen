@@ -29,7 +29,6 @@ public class EggUI : MonoBehaviour {
     }
 
     void Update() {
-        CheckSelect();
         if (isSelected) {
             queenUI.queen.AddToQueue(index);
             isSelected = false;
@@ -46,18 +45,6 @@ public class EggUI : MonoBehaviour {
 
     void OnMouseExit() {
         isMouseOver = false;
-    }
-
-
-    void CheckSelect() {
-        if (Input.GetMouseButtonDown(0)) {
-            if (Input.GetKey(KeyCode.LeftShift)) {
-                isCancelled = isMouseOver;
-            }
-            else {
-                isSelected = isMouseOver;
-            }
-        }
     }
 
 
