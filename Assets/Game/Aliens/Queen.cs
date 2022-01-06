@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(BoxCollider2D))]
 public class Queen : MonoBehaviour {
 
     [System.Serializable]
@@ -16,6 +17,10 @@ public class Queen : MonoBehaviour {
 
     [Space(5), Header("Switches")]
     public bool debugHatching;
+
+    // Properties.
+    public bool isSelected;
+    public bool isMouseOver;
 
     // Properties.
     [Space(5), Header("Alien Eggs")]
@@ -147,6 +152,15 @@ public class Queen : MonoBehaviour {
             alien.biomass = 0f;
         }
     }
+
+    void OnMouseOver() {
+        isMouseOver = true;
+    }
+
+    void OnMouseExit() {
+        isMouseOver = false;
+    }
+
 
     void OnDrawGizmos() {
 

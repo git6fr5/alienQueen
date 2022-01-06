@@ -4,94 +4,111 @@ using UnityEngine;
 
 public class Player : MonoBehaviour {
 
-    public QueenUI queenUI;
+    public Queen queen;
     public Alien alien;
 
     void Update() {
-        Select();
+
+        if (Input.GetMouseButtonDown(0)) {
+            Select();
+        }
+
         Control();
     }
 
     void Select() {
+        bool b_UISelection = false;
+        b_UISelection = UISelect(b_UISelection);
 
-        if (Input.GetMouseButtonDown(0)) {
+        bool b_AlienSelection = false;
+        if (!b_UISelection) {
+            b_AlienSelection = AlienSelect(b_AlienSelection);
+        }
 
-            bool b_UISelection = false;
-            if (queenUI.isMouseOver && !queenUI.isSelected) {
-                // Queen
-                queenUI.isSelected = true;
-                b_UISelection = true;
-            }
-            else if (queenUI.isSelected) {
-                // Eggs
-                for (int i = 0; i < queenUI.options.Count; i++) {
+        if (!b_UISelection || !b_AlienSelection) {
+            Deselect();
+        }
+    }
 
-                    if (queenUI.options[i].isMouseOver) {
-                        if (Input.GetKey(KeyCode.LeftShift)) {
-                            queenUI.options[i].isCancelled = true;
-                        }
-                        else {
-                            queenUI.options[i].isSelected = true;
-                        }
-                        b_UISelection = true;
-                        break;
-                    }
+    void Deselect() {
+        alien.isSelected = false;
+        queen.isSelected = false;
 
+        alien.Stop(alien.transform.position);
+        alien = null;
+    }
+
+    bool AlienSelect(bool b_AlienSelection) {
+        queen.isSelected = false;
+
+        // Nest
+        for (int i = 0; i < queen.nest.Count; i++) {
+
+            if (queen.nest[i].isMouseOver) {
+                // Deselect everything else.
+                for (int j = 0; j < queen.nest.Count; j++) {
+                    queen.nest[j].isSelected = false;
                 }
-
+                queen.nest[i].isSelected = true;
+                alien = queen.nest[i];
+                b_AlienSelection = true; // Not really being used for anything right now.
+                break;
             }
 
-            bool b_AlienSelection = false;
-            if (!b_UISelection) {
+        }
 
-                queenUI.isSelected = false;
+        return b_AlienSelection;
+    }
 
-                // Nest
-                for (int i = 0; i < queenUI.queen.nest.Count; i++) {
+    bool UISelect(bool b_UISelection) {
+        if (queen.isMouseOver && !queen.isSelected) {
+            // Queen
+            queen.isSelected = true;
+            b_UISelection = true;
+        }
+        else if (queen.isSelected) {
+            // Eggs
+            QueenUI queenUI = (QueenUI)GameObject.FindObjectOfType(typeof(QueenUI));
+            for (int i = 0; i < queenUI.options.Count; i++) {
 
-                    if (queenUI.queen.nest[i].isMouseOver) {
-                        // Deselect everything else.
-                        for (int j = 0; j < queenUI.queen.nest.Count; j++) {
-                            queenUI.queen.nest[j].isSelected = false;
-                        }
-                        queenUI.queen.nest[i].isSelected = true;
-                        alien = queenUI.queen.nest[i];
-                        b_AlienSelection = true; // Not really being used for anything right now.
-                        break;
+                if (queenUI.options[i].isMouseOver) {
+                    if (Input.GetKey(KeyCode.LeftShift)) {
+                        queenUI.options[i].isCancelled = true;
                     }
-
+                    else {
+                        queenUI.options[i].isSelected = true;
+                    }
+                    b_UISelection = true;
+                    break;
                 }
 
             }
 
         }
 
-        if (Input.GetMouseButtonDown(1)) {
-
-            alien.isSelected = false;
-            alien = null;
-            queenUI.isSelected = false;
-
-        }
-
+        return b_UISelection;
     }
 
     void Control() {
 
-        if (alien != null && queenUI.isSelected) {
+        if (alien != null && queen.isSelected) {
             alien.isSelected = false;
         }
-        else if (alien != null && !queenUI.isSelected) {
+        else if (alien != null && !queen.isSelected) {
             alien.isSelected = true;
         }
 
         float horizontal = Input.GetAxisRaw("Horizontal");
         float vertical = Input.GetAxisRaw("Vertical");
         bool attack = Input.GetKeyDown(KeyCode.Space);
+        if (Input.GetMouseButtonDown(1)) {
+            Vector3 mousePos = GameRules.MousePosition;
+            alien.MoveTo(mousePos);
+        }
 
         bool b_Input = (horizontal != 0 || vertical != 0f || attack);
-        if (queenUI.isSelected && alien != null && b_Input) {
-            queenUI.isSelected = false;
+        if (queen.isSelected && alien != null && b_Input) {
+            queen.isSelected = false;
             alien.isSelected = true;
         }
 

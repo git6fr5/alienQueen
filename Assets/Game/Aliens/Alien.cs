@@ -1,7 +1,9 @@
-﻿using System.Collections;
+﻿// Libraries.
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+// Definitions.
 using Params = GameRules.Params;
 
 [RequireComponent(typeof(BoxCollider2D))]
@@ -16,15 +18,18 @@ public class Alien : MonoBehaviour {
     [HideInInspector] public float horizontal;
     [HideInInspector] public float vertical;
 
+    public float attackRadius;
+
     public Params speed;
     public float power;
     public float damping;
-    private Vector3 velocity;
+    protected Vector3 velocity;
 
     public bool attack;
     public float biomass;
     public float maxBiomass;
 
+    public bool isControllable;
     public bool isSelected;
     public bool isMouseOver;
 
@@ -41,6 +46,9 @@ public class Alien : MonoBehaviour {
     // Runs once per frame.
     void Update() {
         CheckSelect();
+        if (!isControllable) {
+            Think();
+        }
         Move();
         if (attack) {
             Attack();
@@ -48,7 +56,11 @@ public class Alien : MonoBehaviour {
         }
     }
 
-    void Move() {
+    protected virtual void Think() {
+
+    }
+
+    protected void Move() {
 
         float deltaTime = Time.deltaTime;
 
@@ -63,36 +75,13 @@ public class Alien : MonoBehaviour {
 
         transform.position += velocity * deltaTime;
 
-        horizontal = 0f;
-        vertical = 0f;
+    }
+
+    public virtual void Attack() {
 
     }
 
-    void Attack() {
-
-        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, 1f);
-        for (int i = 0; i < hits.Length; i++) {
-            Human human = hits[i].GetComponent<Human>();
-            if (human != null) {
-                human.Hurt(1);
-                return;
-            }
-
-            Biomass biomass = hits[i].GetComponent<Biomass>();
-            if (biomass != null) {
-                Eat(biomass);
-                return;
-            }
-
-            QueenUI queenUI = hits[i].GetComponent<QueenUI>();
-            if (queenUI != null) {
-                queenUI.queen.StoreBiomass(this);
-                return;
-            }
-        }
-    }
-
-    void Eat(Biomass biomass) {
+    protected void Eat(Biomass biomass) {
         if (this.biomass + biomass.value < maxBiomass) {
             this.biomass += biomass.value;
             Destroy(biomass.gameObject);
@@ -108,6 +97,11 @@ public class Alien : MonoBehaviour {
             spriteRenderer.material.SetFloat("_OutlineWidth", 0f);
         }
 
+    }
+
+    void OnDrawGizmos() {
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, attackRadius);
     }
 
     void OnMouseOver() {

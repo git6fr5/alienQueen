@@ -18,6 +18,7 @@ public class AlienUI : MonoBehaviour {
     void Start() {
         // Caching.
         alien = transform.parent.GetComponent<Alien>();
+        HideDisplay(storageSlider.gameObject);
     }
 
     // Runs once every frame.
@@ -27,7 +28,7 @@ public class AlienUI : MonoBehaviour {
 
     void DisplayBiomass() {
 
-        if (!alien.isSelected) {
+        if (!alien.isSelected && alien.isControllable) {
             HideDisplay(storageSlider.gameObject);
             return;
         }

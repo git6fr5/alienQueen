@@ -86,8 +86,10 @@ public class Human : MonoBehaviour {
     }
 
     void Die() {
-        Biomass biomass = new GameObject("Biomass", typeof(Biomass)).GetComponent<Biomass>();
-        biomass.Init(transform.position, 0.1f);
+        for (int i = 0; i < 5; i++) {
+            Biomass biomass = new GameObject("Biomass", typeof(Biomass)).GetComponent<Biomass>();
+            biomass.Init(transform.position + (Vector3)Random.insideUnitCircle * 0.5f, 0.1f);
+        }
         Destroy(gameObject);
     }
 

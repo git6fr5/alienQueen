@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-[RequireComponent(typeof(BoxCollider2D))]
 public class QueenUI : MonoBehaviour {
 
     // Components.
@@ -15,10 +14,6 @@ public class QueenUI : MonoBehaviour {
     [Space(5), Header("Switches")]
     public bool debugOptions;
     public bool debugQueue;
-
-    // Properties.
-    public bool isSelected;
-    public bool isMouseOver;
 
     // Progress.
     [Space(5), Header("Sliders")]
@@ -45,7 +40,6 @@ public class QueenUI : MonoBehaviour {
         canvas = GetComponent<Canvas>();
 
         // Set up.
-        // canvas.eventCamera = Camera.main;
         CreateOptions();
     }
 
@@ -54,14 +48,6 @@ public class QueenUI : MonoBehaviour {
         DisplayOptions();
         DisplayProgress();
         DisplayQueue();
-    }
-
-    void OnMouseOver() {
-        isMouseOver = true;
-    }
-
-    void OnMouseExit() {
-        isMouseOver = false;
     }
 
     void CreateOptions() {
@@ -74,7 +60,7 @@ public class QueenUI : MonoBehaviour {
 
     void DisplayOptions() {
         GameObject optionObject = optionParent.gameObject;
-        if (isSelected) {
+        if (queen.isSelected) {
             ShowDisplay(optionObject);
         }
         else {
