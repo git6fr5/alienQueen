@@ -154,32 +154,34 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe81e5fdc1364eb4083e020fd8a294bc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  debugHatching: 1
-  isSelected: 0
-  isMouseOver: 0
-  eggs:
-  - index: 0
-    alien: {fileID: 266709546}
-    eggSprite: {fileID: 21300000, guid: 87bf8bbe4ffaadf43bfa9c27d5347009, type: 3}
-    biomass: 0.2
-  - index: 0
-    alien: {fileID: 1780488566}
-    eggSprite: {fileID: 21300000, guid: 14ef83e2a00a6554ab6c94e9cb491aab, type: 3}
-    biomass: 0.1
-  - index: 0
-    alien: {fileID: 1311964297}
-    eggSprite: {fileID: 21300000, guid: 34c7d0a0c09a4724aa3488e01d247886, type: 3}
-    biomass: 0.1
-  nest: []
-  maxBiomass: 1
-  biomass: 0
-  biomassConverted: 0
-  biomassConversionRate: 0.2
+  queenUI: {fileID: 0}
+  initialize: 0
+  incubator:
+    addToQueue: 0
+    index: 0
+    eggs: []
+    biomass: 0
+    maxBiomass: 0
+    biomassConverted: 0
+    biomassConversionRate: 0
+    queue: []
+    maxQueuable: 0
+  incubatorData:
+    eggs: []
+    maxBiomass: 0
+    biomassConversionRate: 0
+    maxQueuable: 0
+  nest:
+    aliens: []
+    hatchRadius: 0
+    selectedAlien: {fileID: 0}
   hatchRadius: 2
-  queue: []
-  maxQueuable: 10
-  addToQueue: 0
-  index: 0
+  selector:
+    isSelected: 0
+    isMouseOver: 0
+    transform: {fileID: 0}
+    radius: 0
+  selectionRadius: 0
 --- !u!4 &109343123
 Transform:
   m_ObjectHideFlags: 0
@@ -327,8 +329,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6fb33c6157005724eaae01c06f9d2c88, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  alien: {fileID: 0}
-  storageSlider: {fileID: 1348485504}
 --- !u!114 &158851167
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -565,8 +565,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6fb33c6157005724eaae01c06f9d2c88, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  alien: {fileID: 0}
-  storageSlider: {fileID: 1466263523}
 --- !u!114 &172787087
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -673,20 +671,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8a10788ecf2e5194397a3106176278ee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  horizontal: 0
-  vertical: 0
-  attackRadius: 0.5
-  speed:
-    min: 0
-    max: 2
-  power: 20
-  damping: 0.75
-  attack: 0
-  biomass: 0
-  maxBiomass: 1
-  isControllable: 0
-  isSelected: 0
-  isMouseOver: 0
+  initialize: 0
+  biomass:
+    value: 0
+  bodyData:
+    speed: 0
+    power: 0
+    damping: 0
+  selectionRadius: 0
+  body:
+    isEnabled: 0
+    useGravity: 0
+    target: {x: 0, y: 0, z: 0}
+    velocity: {x: 0, y: 0, z: 0}
+    transform: {fileID: 0}
+    speed: 0
+    power: 0
+    damping: 0
+  selector:
+    isSelected: 0
+    isMouseOver: 0
+    transform: {fileID: 0}
+    radius: 0
 --- !u!61 &266709547
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -831,6 +837,7 @@ MonoBehaviour:
   queueScale: 0.5
   queueRadius: 1
   queueParent: {fileID: 2001833894}
+  isEnabled: 0
 --- !u!114 &370193923
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -931,6 +938,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   biomassSprite: {fileID: 21300000, guid: 01614ba612c6f134c9d066b0c7279e5b, type: 3}
+  gravity: 0
+  editing: 0
 --- !u!20 &519420031
 Camera:
   m_ObjectHideFlags: 0
@@ -1351,8 +1360,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 85078d985ea211b46a1d695c3df87779, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  queen: {fileID: 109343122}
-  alien: {fileID: 0}
+  queen: {fileID: 0}
+  mouseInput: 0
+  keyInput: 0
 --- !u!4 &1186090211
 Transform:
   m_ObjectHideFlags: 0
@@ -1365,7 +1375,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 4
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1271019851
 GameObject:
@@ -1448,20 +1458,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f57f61ab652b76f498a929d3d2d2e0b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  horizontal: 0
-  vertical: 0
-  attackRadius: 0.5
-  speed:
-    min: 0
-    max: 1
-  power: 20
-  damping: 0.75
-  attack: 0
-  biomass: 0
-  maxBiomass: 5
-  isControllable: 0
-  isSelected: 0
-  isMouseOver: 0
+  initialize: 0
+  biomass:
+    value: 0
+  bodyData:
+    speed: 0
+    power: 0
+    damping: 0
+  selectionRadius: 0
+  body:
+    isEnabled: 0
+    useGravity: 0
+    target: {x: 0, y: 0, z: 0}
+    velocity: {x: 0, y: 0, z: 0}
+    transform: {fileID: 0}
+    speed: 0
+    power: 0
+    damping: 0
+  selector:
+    isSelected: 0
+    isMouseOver: 0
+    transform: {fileID: 0}
+    radius: 0
 --- !u!61 &1311964298
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -1539,6 +1557,50 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!1 &1331524119
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1331524121}
+  - component: {fileID: 1331524120}
+  m_Layer: 0
+  m_Name: Human Spawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1331524120
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1331524119}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b88ace4a2fb39e042ac1a9d8866c21f9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &1331524121
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1331524119}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.3845427, y: 0.93383104, z: -3.1600041}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 1531512899}
+  m_Father: {fileID: 0}
+  m_RootOrder: 4
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1348485502
 GameObject:
   m_ObjectHideFlags: 0
@@ -2001,7 +2063,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1531512896
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2014,17 +2076,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a41de3ac23b31504f852e54d905a097d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  target: {fileID: 1645846053}
-  speed:
-    min: 0
-    max: 1
-  power: 20
-  damping: 0.995
-  isSelected: 0
-  isMouseOver: 0
-  thinkInterval: 3
-  maxHealth: 0
-  health: 0
 --- !u!212 &1531512897
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -2109,13 +2160,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1531512895}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 6.48, y: -1.03, z: 0}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 6.095457, y: -1.963831, z: 3.1600041}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1645846053}
-  m_Father: {fileID: 0}
-  m_RootOrder: 3
+  m_Father: {fileID: 1331524121}
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1581279100
 GameObject:
@@ -2169,8 +2220,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6fb33c6157005724eaae01c06f9d2c88, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  alien: {fileID: 0}
-  storageSlider: {fileID: 679674838}
 --- !u!114 &1581279104
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2392,20 +2441,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2fbd60d95686d9844b8568e662a29784, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  horizontal: 0
-  vertical: 0
-  attackRadius: 0.5
-  speed:
-    min: 0
-    max: 1
-  power: 20
-  damping: 0.75
-  attack: 0
-  biomass: 0
-  maxBiomass: 1
-  isControllable: 0
-  isSelected: 0
-  isMouseOver: 0
+  initialize: 0
+  biomass:
+    value: 0
+  bodyData:
+    speed: 0
+    power: 0
+    damping: 0
+  selectionRadius: 0
+  body:
+    isEnabled: 0
+    useGravity: 0
+    target: {x: 0, y: 0, z: 0}
+    velocity: {x: 0, y: 0, z: 0}
+    transform: {fileID: 0}
+    speed: 0
+    power: 0
+    damping: 0
+  selector:
+    isSelected: 0
+    isMouseOver: 0
+    transform: {fileID: 0}
+    radius: 0
 --- !u!61 &1780488567
 BoxCollider2D:
   m_ObjectHideFlags: 0

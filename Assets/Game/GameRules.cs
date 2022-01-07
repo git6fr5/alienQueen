@@ -2,10 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ReadOnlyAttribute : PropertyAttribute {
-
-}
-
 public class GameRules : MonoBehaviour {
 
     [System.Serializable]
@@ -45,6 +41,8 @@ public class GameRules : MonoBehaviour {
 
     }
 
+    public static float MovementPrecision = 0.05f;
+
     public static float OutlineWidth = 1f / 16f;
 
     public static UnityEngine.Camera MainCamera;
@@ -53,18 +51,30 @@ public class GameRules : MonoBehaviour {
     public Sprite biomassSprite;
     public static Sprite BiomassSprite;
 
+    public float gravity;
+    public static float Gravity;
+
+    public bool editing;
+
     void Start() {
         MainCamera = Camera.main;
         BiomassSprite = biomassSprite;
+        Gravity = gravity;
     }
 
     void Update() {
-
+        if (editing) {
+            Gravity = gravity;
+        }
     }
 
     void OnDrawGizmos() {
 
 
     }
+
+}
+
+public class ReadOnlyAttribute : PropertyAttribute {
 
 }

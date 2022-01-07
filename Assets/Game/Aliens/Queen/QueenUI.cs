@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+[RequireComponent(typeof(Canvas))]
 public class QueenUI : MonoBehaviour {
 
     // Components.
@@ -33,25 +34,32 @@ public class QueenUI : MonoBehaviour {
     public float queueRadius;
     public Transform queueParent;
 
-    // Runs once before the first frame.
-    void Start() {
-        // Caching.
-        queen = transform.parent.GetComponent<Queen>();
-        canvas = GetComponent<Canvas>();
 
-        // Set up.
-        CreateOptions();
+    // Properties.
+    [SerializeField, ReadOnly] private bool isEnabled;
+
+    // Run to initialize.
+    public void Init(Queen queen) {
+        // Caching.
+        canvas = GetComponent<Canvas>();
+        this.queen = queen;
+        UpdateOptions();
+        gameObject.SetActive(true);
     }
 
-    // Runs once every frame.
-    void Update() {
+    public void OnUpdate() {
+        isEnabled = queen.selector.isSelected;
+        Display();
+    }
+
+    void Display() {
         DisplayOptions();
         DisplayProgress();
         DisplayQueue();
     }
 
-    void CreateOptions() {
-        for (int i = 0; i < queen.eggs.Length; i++) {
+    public void UpdateOptions() {
+        for (int i = 0; i < queen.incubator.eggs.Length; i++) {
             EggUI newOption = new GameObject("New Option", typeof(EggUI)).GetComponent<EggUI>();
             newOption.Init(this, i, optionParent);
             options.Add(newOption);
@@ -60,7 +68,7 @@ public class QueenUI : MonoBehaviour {
 
     void DisplayOptions() {
         GameObject optionObject = optionParent.gameObject;
-        if (queen.isSelected) {
+        if (isEnabled) {
             ShowDisplay(optionObject);
         }
         else {
@@ -76,20 +84,20 @@ public class QueenUI : MonoBehaviour {
         }
         queueDisplay = new List<SpriteRenderer>();
 
-        for (int i = 0; i < queen.queue.Count; i++) {
+        for (int i = 0; i < queen.incubator.queue.Count; i++) {
             SpriteRenderer newQueueDisplay = new GameObject("New Queue Display", typeof(SpriteRenderer)).GetComponent<SpriteRenderer>();
-            newQueueDisplay.sprite = queen.queue[i].eggSprite;
+            newQueueDisplay.sprite = queen.incubator.queue[i].eggSprite;
 
-            float angle = 360f * (float)i / (float)queen.maxQueuable;
+            float angle = 360f * (float)i / (float)queen.incubator.maxQueuable;
             newQueueDisplay.transform.position = transform.position + queueRadius * (Quaternion.Euler(0f, 0f, angle) * Vector3.right);
             newQueueDisplay.transform.SetParent(queueParent);
             newQueueDisplay.transform.localScale = new Vector3(queueScale, queueScale, 1f);
-            
+
             queueDisplay.Add(newQueueDisplay);
         }
 
         if (queueDisplay.Count > 0) {
-            float progress = queen.biomassConverted / queen.queue[0].biomass;
+            float progress = queen.incubator.biomassConverted / queen.incubator.queue[0].biomassRequired;
             queueDisplay[0].transform.localScale = new Vector3(queueScale + (1f - queueScale) * progress, queueScale + (1f - queueScale) * progress, 1f);
         }
 
@@ -97,18 +105,18 @@ public class QueenUI : MonoBehaviour {
 
     void DisplayProgress() {
 
-        float storage = queen.biomass / queen.maxBiomass;
+        float storage = queen.incubator.biomass / queen.incubator.maxBiomass;
         storageSlider.value = storage;
 
         GameObject displayObject = progressSlider.gameObject;
 
-        if (queen.queue.Count == 0) {
+        if (queen.incubator.queue.Count == 0) {
             HideDisplay(displayObject);
             return;
         }
 
         ShowDisplay(displayObject);
-        float progress = queen.biomassConverted / queen.queue[0].biomass;
+        float progress = queen.incubator.biomassConverted / queen.incubator.queue[0].biomassRequired;
         progressSlider.value = progress;
 
     }
@@ -119,20 +127,6 @@ public class QueenUI : MonoBehaviour {
 
     void ShowDisplay(GameObject gameObject) {
         gameObject.SetActive(true);
-    }
-
-    void OnDrawGizmos() {
-
-        if (debugOptions) {
-            Gizmos.color = Color.green;
-            Gizmos.DrawWireSphere(transform.position, optionRadius);
-        }
-
-        if (debugQueue) {
-            Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(transform.position, queueRadius);
-        }
-
     }
 
 }
