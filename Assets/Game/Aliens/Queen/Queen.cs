@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(SpriteRenderer))]
-public class Queen : MonoBehaviour {
+public class Queen : Organism {
 
     // Components.
     Player player;

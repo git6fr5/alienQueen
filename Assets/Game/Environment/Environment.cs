@@ -5,6 +5,7 @@ using UnityEngine.Tilemaps;
 
 public class Environment : MonoBehaviour {
 
+    public Transform rotator;
     public Wall[] walls;
     public int index;
 
@@ -46,7 +47,7 @@ public class Environment : MonoBehaviour {
                 eulerAngles = targetRotation;
             }
 
-            transform.eulerAngles = eulerAngles;
+            rotator.eulerAngles = eulerAngles;
         }
     }
 
@@ -73,11 +74,11 @@ public class Environment : MonoBehaviour {
     }
 
     void Next() {
-        targetRotation += Vector3.up * 90f;
+        targetRotation -= Vector3.up * 90f;
     }
 
     void Prev() {
-        targetRotation -= Vector3.up * 90f;
+        targetRotation += Vector3.up * 90f;
     }
 
 }

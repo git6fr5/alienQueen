@@ -28,6 +28,11 @@ public class Nest {
     }
 
     private void FilterSelections() {
+
+        if (selectedAlien != null && !selectedAlien.selector.isSelected) {
+            selectedAlien = null;
+        }
+
         for (int i = 0; i < aliens.Count; i++) {
             if (aliens[i].selector.isSelected && selectedAlien != aliens[i]) {
                 if (selectedAlien != null) {

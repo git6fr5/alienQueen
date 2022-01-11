@@ -6,12 +6,11 @@ using UnityEngine;
 // Definitions.
 using Params = GameRules.Params;
 
-[RequireComponent(typeof(SpriteRenderer))]
-public class Alien : MonoBehaviour {
+public class Alien : Organism {
 
     // Components.
     Queen queen;
-    SpriteRenderer spriteRenderer;
+    public AlienUI alienUI;
 
     // Properties.
     [Space(5), Header("Switches")]
@@ -20,7 +19,6 @@ public class Alien : MonoBehaviour {
     [Space(5), Header("Properties")]
     [SerializeField] public Biomass biomass;
     [SerializeField] public Body.BodyData bodyData;
-    [SerializeField] public float selectionRadius;
 
     [Space(5), Header("Modules")]
     [SerializeField] public Body body;
@@ -31,10 +29,13 @@ public class Alien : MonoBehaviour {
         if (queen != null) {
             transform.position = queen.transform.position + (Vector3)(Random.insideUnitCircle.normalized) * queen.nest.hatchRadius;
         }
-        spriteRenderer = GetComponent<SpriteRenderer>();
 
         body = new Body(transform, bodyData);
-        selector = new Selector(transform, selectionRadius);
+        selector = new Selector(transform, Mathf.Max(bodyData.length, bodyData.width));
+
+        if (alienUI != null) {
+            alienUI.Init(this);
+        }
 
         initialize = false;
         this.queen = queen;
@@ -55,12 +56,19 @@ public class Alien : MonoBehaviour {
     public void OnUpdate(float deltaTime, bool clicked) {
         selector.Update(clicked);
         body.Update(deltaTime);
-        Render();
+        if (alienUI != null) { alienUI.OnUpdate(); }
     }
 
-    void Render() {
-        float f_OutlineWidth = selector.isSelected ? GameRules.OutlineWidth : 0f;
-        spriteRenderer.material.SetFloat("_OutlineWidth", f_OutlineWidth);
+    public void Action() {
+        print("Performing Alien Action");
+        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, 1f);
+        for (int i = 0; i < hits.Length; i++) {
+            Human human = hits[i].GetComponent<Human>();
+            if (human != null) {
+                human.OnHurt(1, Vector3.right * -(transform.position.x - human.transform.position.x), 8f, 0.25f);
+            }
+        }
+
     }
 
 

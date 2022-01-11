@@ -54,17 +54,22 @@ public class GameRules : MonoBehaviour {
     public float gravity;
     public static float Gravity;
 
-    public bool editing;
+    public float frameRate;
+    public static float FrameRate = 24f;
+
+    public bool reset;
 
     void Start() {
         MainCamera = Camera.main;
         BiomassSprite = biomassSprite;
-        Gravity = gravity;
+        StartCoroutine(IEReset());
     }
 
-    void Update() {
-        if (editing) {
+    private IEnumerator IEReset() {
+        while (true) {
+            yield return new WaitForSeconds(0.2f);
             Gravity = gravity;
+            frameRate = FrameRate;
         }
     }
 

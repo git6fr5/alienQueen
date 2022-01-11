@@ -10,19 +10,35 @@ public class Body {
     [SerializeField, ReadOnly] private bool isEnabled;
     [SerializeField, ReadOnly] private bool useGravity;
     [SerializeField, ReadOnly] private Vector3 target;
-    [SerializeField, ReadOnly] private Vector3 velocity;
+    [SerializeField, ReadOnly] public Vector3 velocity;
+    [SerializeField, ReadOnly] public Vector3 acceleration;
 
     [Space(5), Header("Settings")]
     [SerializeField, ReadOnly] private Transform transform;
     [SerializeField, ReadOnly] private float speed;
     [SerializeField, ReadOnly] private float power;
     [SerializeField, ReadOnly] private float damping;
+    [SerializeField, ReadOnly] public float length;
+    [SerializeField, ReadOnly] public float width;
+    [SerializeField, ReadOnly] private float jumpForce;
+    [SerializeField, ReadOnly] private float jumpTicks = 0f;
+    [SerializeField, ReadOnly] private Vector3 gravity;
+
+    [Space(5), Header("Knockback")]
+    [SerializeField, ReadOnly] private bool isKnockedback;
+    [SerializeField, ReadOnly] private float knockbackDuration;
+    [SerializeField, ReadOnly] private float knockbackTicks;
+    [SerializeField, ReadOnly] private Vector3 knockbackVector;
+
 
     [System.Serializable]
     public struct BodyData {
         public float speed;
         public float power;
         public float damping;
+        public float length;
+        public float width;
+        public float jumpForce;
     }
 
     public Body(Transform transform, BodyData bodyData, bool useGravity = true) {
@@ -31,6 +47,9 @@ public class Body {
         this.speed = bodyData.speed;
         this.power = bodyData.power;
         this.damping = bodyData.damping;
+        this.length = bodyData.length;
+        this.width = bodyData.width;
+        this.jumpForce = bodyData.jumpForce;
         this.useGravity = useGravity;
         isEnabled = true;
     }
@@ -46,6 +65,21 @@ public class Body {
         target = position;
         target.z = 0f;
     }
+
+    // Moves the body to this position.
+    public void AddKnockback(Vector3 knockbackDirection, float magnitude, float duration) {
+        knockbackVector = magnitude * knockbackDirection.normalized;
+        knockbackDuration = Mathf.Max(knockbackDuration - knockbackTicks, duration);
+        knockbackTicks = 0f;
+        isKnockedback = true;
+    }
+
+    public void Jump() {
+        Debug.Log("Trying to jump");
+        if (jumpTicks == 0f) {
+            gravity += Vector3.up * jumpForce;
+        }
+    }
     #endregion
 
     // Updates the body.
@@ -55,66 +89,119 @@ public class Body {
             return;
         }
 
+        if (isKnockedback) {
+            Knockback(deltaTime);
+            return;
+        }
+
         // Get the direction.
         Vector3 direction = target - transform.position;
-        if (direction.sqrMagnitude < GameRules.MovementPrecision) {
+        if (direction.sqrMagnitude < GameRules.MovementPrecision * GameRules.MovementPrecision) {
             direction = Vector3.zero;
         }
         direction = direction.normalized;
 
         // Acceleration.
-        Vector3 acceleration = direction * power;
+        acceleration = direction * power;
         velocity += acceleration * deltaTime;
         velocity = speed < velocity.magnitude ? speed * velocity.normalized : velocity;
 
         // Damping.
         if (acceleration == Vector3.zero) {
             velocity *= damping;
+            if (velocity.sqrMagnitude < GameRules.MovementPrecision * GameRules.MovementPrecision) {
+                velocity = Vector3.zero;
+            }
+
         }
 
-        // Moving.
-        transform.position += velocity * deltaTime;
+        Move(deltaTime);
 
         if (useGravity) {
             Gravity(deltaTime);
-            target = transform.position;
+            target.y = transform.position.y;
         }
 
     }
 
-    public float feetWidth = 0.35f;
-    public float bodyWidth = 0.35f;
+    private void Move(float deltaTime) {
+        Vector3 position = transform.position;
+        bool b_Forward = velocity.x > 0f;
+        bool b_Blocked = CheckSides(position, b_Forward);
+    
+        // Moving.
+        if (!b_Blocked) {
+            transform.position += velocity * deltaTime;
+        }
+    }
+
+    private void Knockback(float deltaTime) {
+        knockbackTicks += deltaTime;
+        if (knockbackTicks > knockbackDuration) {
+            knockbackDuration = 0f;
+            knockbackTicks = 0f;
+            isKnockedback = false;
+        }
+        transform.position += knockbackVector * deltaTime;
+    }
 
     // Affects the body with gravity.
     private void Gravity(float deltaTime) {
 
         Vector3 position = transform.position;
+        bool b_Floor = CheckFeet(position);
+        bool b_Ceiling = CheckFeet(position, false);
 
-        // temp floor.
-        Vector2 feetPosition = (Vector2)position + Vector2.down * bodyWidth;
-        Collider2D[] hits = Physics2D.OverlapBoxAll(feetPosition, new Vector2(feetWidth, 0.05f), 0f);
-        Debug.DrawLine((Vector3)feetPosition - Vector3.right * feetWidth, (Vector3)feetPosition + Vector3.right * feetWidth);
+        gravity += Vector3.up * GameRules.Gravity * deltaTime;
+        if (b_Ceiling && gravity.y > 0) {
+            gravity.y = 0f;
+        }
+        if (b_Floor) {
+            if (gravity.y < 0) {
+                gravity.y = 0f;
+            }
+            jumpTicks = 0f;
+        }
+        else {
+            jumpTicks += deltaTime;
+        }
+        transform.position += gravity * deltaTime;
 
-        Debug.Log(hits.Length);
+    }
+
+    private bool CheckFeet(Vector3 position, bool bottom = true) {
+        float flip = bottom ? 1f : -1f;
+        Vector3 feetPosition = position + flip * Vector3.down * width;
+        RaycastHit2D[] hits = Physics2D.LinecastAll(feetPosition - Vector3.right * length / 2f, feetPosition + Vector3.right * length / 2f);
+        Debug.DrawLine(feetPosition - Vector3.right * length / 2f, feetPosition + Vector3.right * length / 2f);
+
         bool b_Floor = false;
         for (int i = 0; i < hits.Length; i++) {
-            Floor floor = hits[i].GetComponent<Floor>();
+            Floor floor = hits[i].collider.GetComponent<Floor>();
             if (floor != null) {
                 b_Floor = true;
                 break;
             }
         }
-        Debug.Log(b_Floor);
 
-        if (position.y <= -5f) {
-            position.y = 0f;
-            transform.position = position;
-            return;
-        }
-
-        Vector3 gravity = new Vector3(0f, GameRules.Gravity, 0f);
-        transform.position += gravity * deltaTime;
-
+        return b_Floor;
     }
 
+    private bool CheckSides(Vector3 position, bool forward) {
+        float flip = forward ? 1f : -1f;
+        Vector3 sidePosition = position + flip * Vector3.right * length;
+        RaycastHit2D[] hits = Physics2D.LinecastAll(sidePosition - Vector3.down * width / 2f, sidePosition + Vector3.down * width / 2f);
+        Debug.DrawLine(sidePosition - Vector3.down * width / 2f, sidePosition + Vector3.down * width / 2f);
+
+        bool b_Blocked = false;
+        for (int i = 0; i < hits.Length; i++) {
+            Floor floor = hits[i].collider.GetComponent<Floor>();
+            if (floor != null) {
+                b_Blocked = true;
+                break;
+            }
+        }
+
+        return b_Blocked;
+    }
 }
