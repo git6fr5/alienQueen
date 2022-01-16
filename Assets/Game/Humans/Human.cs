@@ -3,126 +3,140 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// Definitions.
-using Params = GameRules.Params;
+[RequireComponent(typeof(Organism))]
+public class Human : MonoBehaviour {
 
-public class Human : Organism {
+    #region Components
+    [HideInInspector] private Organism organism;
+    [HideInInspector] private Player player;
+    #endregion
 
-    // Properties.
-    [Space(5), Header("Switches")]
-    [SerializeField] public bool initialize;
+    #region Parameters
+    [Space(2), Header("Patrol")]
+    [SerializeField] public Transform[] patrolPoints;
+    [SerializeField, ReadOnly] private int patrolIndex;
+    [Space(2), Header("Vision")]
+    [SerializeField] private float visionAngle;
+    [SerializeField, ReadOnly] private float correctedVisionAngle;
+    [SerializeField] private float visionDistance;
+    #endregion
 
-    [Space(5), Header("Properties")]
-    [SerializeField] public Biomass biomass;
-    [SerializeField] public Body.BodyData bodyData;
-    [SerializeField] public Vision.VisionData visionData;
+    // temp.
+    [SerializeField] private Transform visionTransform;
+    [HideInInspector] private Vector3 visionTransformScale;
 
-    [HideInInspector] private Vector3 origin;
-    [SerializeField] public float patrolPointA;
-    [SerializeField] public float patrolPointB;
-
-    [Space(5), Header("Modules")]
-    [SerializeField] public Body body;
-    [SerializeField] public Vision vision;
-
-    // Initializes the alien.
-    public virtual void Init() {
-
-        body = new Body(transform, bodyData);
-        vision = new Vision();
-
-        origin = transform.position;
-
-        initialize = false;
-        gameObject.SetActive(true);
+    #region Unity
+    // Runs once before the first frame.
+    private void Start() {
+        Init();
     }
 
+    // Runs once every frame.
     private void Update() {
-        if (initialize) {
-            Init();
-            initialize = false;
-        }
-
-        OnUpdate(Time.deltaTime);
+        // Cache the time differential.
+        float deltaTime = Time.deltaTime;
+        ProcessLogic();
+        Vision();
     }
 
-    // Runs once per frame.
-    float direction = 1f;
-    public void OnUpdate(float deltaTime) {
-
-        Think();
-
-        direction = body.velocity.x != 0f ? Mathf.Sign(body.velocity.x) : direction;
-        vision.Update(deltaTime, transform.position, 5f, direction, 0.35f);
-        body.Update(deltaTime);
-
-        if (health <= 0) {
-            OnDeath();
+    // Runs once every draw call.
+    void OnDrawGizmos() {
+        Gizmos.color = Color.red;
+        if (patrolPoints != null) {
+            for (int i = 0; i < patrolPoints.Length; i++) {
+                Gizmos.DrawWireSphere(patrolPoints[i].position, 0.1f);
+            }
         }
+
+        // float currVisionAngle = visionAngle;
+        //if (organism != null && !organism.organicBody.facingRight) {
+        //    currVisionAngle += 180f;
+        //}
+
+        Gizmos.color = new Color(1f, 1f, 1f, 0.5f);
+
+        Vector3 axis = Vector3.right;
+        if (organism != null) {
+            axis = organism.organicBody.facingRight ? Vector3.right : Vector3.left;
+        }
+
+        Gizmos.DrawLine(transform.position, transform.position + Quaternion.Euler(0f, 0f, visionAngle) * axis * visionDistance);
+        Gizmos.DrawLine(transform.position, transform.position + Quaternion.Euler(0f, 0f, -visionAngle) * axis * visionDistance);
+        
+        Gizmos.color = new Color(1f, 1f, 1f, 0.25f);
+        Gizmos.DrawWireSphere(transform.position, visionDistance);
+
+    }
+    #endregion
+
+    #region Methods
+    private void Init() {
+        organism = GetComponent<Organism>();
+        patrolIndex = 0;
+        for (int i = 0; i < patrolPoints.Length; i++) {
+            patrolPoints[i].transform.SetParent(null);
+        }
+        visionTransformScale = visionTransform.localScale;
     }
 
-    void Think() {
+    private float pauseTimer = 0f;
 
-        if (vision.isScared) {
-            body.MoveTo(transform.position);
-            body.Jump();
+    private void ProcessLogic() {
+
+        OrganicBody organicBody = organism.organicBody;
+
+        pauseTimer -= Time.deltaTime;
+        if (pauseTimer > 0f) {
+            organicBody.MoveTo(transform.position);
+            return;
+        }
+        pauseTimer = 0f;
+
+        Vector3 target = transform.position;
+        target.x = patrolPoints[patrolIndex].transform.position.x;
+        if (Mathf.Abs(organicBody.transform.position.x - target.x) < GameRules.MovementPrecision){
+            pauseTimer = 1f;
+            patrolIndex = (patrolIndex + 1) % patrolPoints.Length;
+        }
+        organicBody.MoveTo(target);
+    }
+
+    private void Vision() {
+
+        visionTransform.localScale = new Vector3(organism.organicBody.facingRight ? visionTransformScale.x : -visionTransformScale.x, visionTransformScale.y, visionTransformScale.z);
+
+        for (int i = 0; i < GameRules.MainPlayer.organisms.Length; i++) {
+            Alien alien = GameRules.MainPlayer.organisms[i].GetComponent<Alien>();
+            if (alien != null) {
+                CheckAlien(alien);
+            }
+
+        }
+    
+    }
+
+    private void CheckAlien(Alien alien) {
+
+        AlienBody alienBody = alien.GetComponent<AlienBody>();
+        if (alienBody!= null && alienBody.isHidden) {
             return;
         }
 
-        Vector3 target = transform.position;
-        if (patrolPoints != null && index < patrolPoints.Length) {
-            target = patrolPoints[index];
-            body.MoveTo(target);
-        }
-        if ((transform.position - target).sqrMagnitude < GameRules.MovementPrecision * GameRules.MovementPrecision) {
-            target = NextPatrolPoint();
-            print(target);
-            print("hello");
-            body.MoveTo(target);
-        }
-    }
+        Vector3 alienPos = alien.transform.position;
+        Vector3 alienDisp = alienPos - transform.position;
 
-    private Vector3[] patrolPoints = null;
-    private int index = 0;
-    Vector3 NextPatrolPoint() {
-        if (patrolPoints == null) {
-            List<Vector3> L_PatrolPoints = new List<Vector3>();
-            L_PatrolPoints.Add(origin + Vector3.right * patrolPointA);
-            L_PatrolPoints.Add(origin + Vector3.right * patrolPointB);
-            patrolPoints = L_PatrolPoints.ToArray();
-            index = 0;
-            return patrolPoints[0];
-        }
-        else {
-            index = (index + 1) % patrolPoints.Length;
-            return patrolPoints[index];
+        Vector3 axis = organism.organicBody.facingRight ? Vector3.right : Vector3.left;
+        float angleToAlien = Vector2.SignedAngle(axis, (Vector2)alienDisp);
+        float distanceToAlien = alienDisp.magnitude;
+
+        bool withinAngle = angleToAlien < visionAngle && angleToAlien > -visionAngle;
+        bool withinDistance = distanceToAlien < visionDistance;
+
+        if (withinDistance && withinAngle) {
+            GameRules.KillAlien(alien);
+            // GameRules.GameOver();
         }
     }
-
-    public void OnHurt(int damage, Vector3 knockback, float magnitude, float duration) {
-        health -= damage;
-        body.AddKnockback(knockback, magnitude, duration);
-    }
-
-    public void OnDeath() {
-        // Instantiate(corpse);
-        Destroy(gameObject);
-    }
-
-    void OnDrawGizmos() {
-        direction = body.velocity.x != 0f ? Mathf.Sign(body.velocity.x) : direction;
-        Gizmos.DrawWireCube(transform.position + Vector3.right * direction * 2.5f, new Vector3(5f, 0.35f, 1));
-        Gizmos.DrawWireCube(transform.position - Vector3.right * direction * 2.5f / 3f, new Vector3(5f / 3f, 0.35f, 1));
-
-        Gizmos.color = Color.red;
-        Vector3 position = transform.position;
-        if (Application.isPlaying) {
-            position = origin;
-        }
-        Gizmos.DrawWireSphere(position + Vector3.right * patrolPointA, 0.25f);
-        Gizmos.DrawWireSphere(position + Vector3.right * patrolPointB, 0.25f);
-
-    }
-
+    #endregion
 
 }
