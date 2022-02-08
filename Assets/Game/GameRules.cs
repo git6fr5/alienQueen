@@ -4,78 +4,79 @@ using UnityEngine;
 
 public class GameRules : MonoBehaviour {
 
-    #region Static Variables
+    /* --- Static Tags --- */
+    public static string PlayerTag = "Player";
+    public static string GroundTag = "Ground";
+    
+    /* --- Static Variables --- */
     // Player.
-    public static Player MainPlayer;
+    public static Controller MainPlayer;
+    // Objects.
+    public static GameObject BackgroundObject;
     public static GameObject GameOverObject;
+    public static GameObject GlobalLightObject;
     // Movement.
     public static float VelocityDamping = 0.95f;
     public static float MovementPrecision = 0.05f;
-    public static float Gravity = -50f;
+    public static float GravityScale = -50f;
     // Animation.
     public static float FrameRate = 24f;
     public static float OutlineWidth = 1f / 16f;
-    public static Sprite BiomassSprite;
     // Camera.
     public static UnityEngine.Camera MainCamera;
     public static Vector3 MousePosition => MainCamera.ScreenToWorldPoint(UnityEngine.Input.mousePosition);
-    #endregion
 
-    #region Properties
-    public Player mainPlayer;
-    public GameObject globalLight;
+    /* --- Properties --- */
+    public Controller mainPlayer;
+    public GameObject backgroundObject;
+    public GameObject globalLightObject;
     public GameObject gameOverObject;
     public float velocityDamping = 0.95f;
-    public float gravity;
+    public float gravityScale;
     public float frameRate;
-    public Sprite biomassSprite;
-    public bool reset;
     public int cameraX;
     public int cameraY;
     public int pixelsPerUnit;
-    #endregion
+    public bool reset;
+    public bool followPlayer;
+    public Vector3 followOffset;
 
+    /* --- Unity --- */
+    // Runs once before the first frame.
     void Start() {
+        Init();
+    }
+
+    // Runs once every frame.
+    private void Update() {
+        if (followPlayer) {
+            MainCamera.transform.position = MainPlayer.transform.position + followOffset;
+        }
+    }
+
+    /* --- Methods --- */
+    private void Init() {
+        // Set these static variables.
         MainCamera = Camera.main;
-        GameOverObject = gameOverObject;
-        BiomassSprite = biomassSprite;
         MainPlayer = mainPlayer;
-        globalLight.SetActive(false);
-        StartCoroutine(IEReset());
+
+        BackgroundObject = backgroundObject;
+        GameOverObject = gameOverObject;
+        GlobalLightObject = globalLightObject;
+        // GlobalLightObject.SetActive(false);
+
+        VelocityDamping = velocityDamping;
+        GravityScale = gravityScale;
+        FrameRate = frameRate;
     }
 
-    private IEnumerator IEReset() {
-        while (true) {
-            yield return new WaitForSeconds(0.2f);
-            VelocityDamping = velocityDamping;
-            Gravity = gravity;
-            frameRate = FrameRate;
-        }
-    }
-
-    public static void KillAlien(Alien alien) {
-
-        List<Organism> temp = new List<Organism>();
-        for (int i = 0; i < MainPlayer.organisms.Length; i++) {
-            temp.Add(MainPlayer.organisms[i]);
-        }
-        temp.Remove(alien);
-        MainPlayer.organisms = temp.ToArray();
-        MainPlayer.organismIndex = 0;
-
-        Destroy(alien.gameObject);
-
-        if (temp == null || temp.Count == 0) {
-            GameOver();
-        }
-
-    }
-
+    /* --- Events --- */
     public static void GameOver() {
         GameOverObject.SetActive(true);
         Time.timeScale = 0f;
     }
 
+    /* --- Debug --- */
     void OnDrawGizmos() {
         Gizmos.DrawWireCube(transform.position, new Vector3(cameraX, cameraY, 1f));
     }
