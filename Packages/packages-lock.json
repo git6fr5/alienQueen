@@ -9,12 +9,6 @@
       },
       "url": "https://package.openupm.com"
     },
-    "com.needle.auto-installer": {
-      "version": "file:installer.com.cammin.ldtkunity",
-      "depth": 0,
-      "source": "embedded",
-      "dependencies": {}
-    },
     "com.unity.2d.animation": {
       "version": "4.2.5",
       "depth": 0,
